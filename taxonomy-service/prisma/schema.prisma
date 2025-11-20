@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TaxonomyCache {
+  id             String   @id @default(uuid())
+  speciesId      String   @unique
+  family         String?
+  subfamily      String?
+  evolutionBranch String?
+  lastUpdated    DateTime @default(now())
+
+  @@map("taxonomy_cache")
+}

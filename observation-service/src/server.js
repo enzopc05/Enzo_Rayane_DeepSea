@@ -5,6 +5,8 @@ const speciesRoutes = require('./routes/species.routes');
 const observationRoutes = require('./routes/observation.routes');
 const observationController = require('./controllers/observation.controller');
 const { authenticateToken } = require('./middlewares/auth.middleware');
+const adminRoutes = require('./routes/admin.routes');
+const expertRoutes = require('./routes/expert.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -16,6 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/species', speciesRoutes);
 app.use('/observations', observationRoutes);
+app.use('/admin', adminRoutes);
+app.use('/expert', expertRoutes);
 
 // Route pour récupérer les observations d'une espèce
 app.get('/species/:id/observations', authenticateToken, observationController.getObservationsBySpecies);

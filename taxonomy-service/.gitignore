@@ -1,0 +1,45 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+coverage/
+.nyc_output/
+
+# Prisma
+prisma/.env
+node_modules/.prisma/
+
+# Logs
+logs/
+*.log
+pids/
+*.pid
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+
+# Optional npm cache
+.npm
+
+# Misc
+.env.production
+.env.test

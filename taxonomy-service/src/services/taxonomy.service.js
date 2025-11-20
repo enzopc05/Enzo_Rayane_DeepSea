@@ -238,6 +238,68 @@ class TaxonomyService {
   }
 
   /**
+ * GET /taxonomy/stats - Génère les statistiques complètes
+ */
+async getStats(token) {
+  // 1. Récupérer toutes les espèces
+  const species = await this.fetchSpeciesFromObservationService(token);
+
+  if (species.length === 0) {
+    return {
+      totalSpecies: 0,
+      totalObservations: 0,
+      avgObservationsPerSpecies: 0,
+      speciesClassification: [],
+      keywords: []
+    };
+  }
+
+  // 2. Pour chaque espèce, récupérer ses observations
+  const speciesWithStats = await Promise.all(
+    species.map(async (sp) => {
+      const observations = await this.fetchObservationsForSpecies(sp.id, token);
+      const validatedObs = observations.filter(o => o.status === 'VALIDATED');
+      
+      return {
+        id: sp.id,
+        name: sp.name,
+        dangerLevel: sp.dangerLevel,
+        totalObservations: observations.length,
+        validatedObservations: validatedObs.length,
+        family: this.generateFamily(sp),
+        subfamily: this.generateSubfamily(sp),
+        evolutionBranch: this.generateEvolutionBranch(sp.dangerLevel),
+        keywords: this.extractKeywords(validatedObs)
+      };
+    })
+  );
+
+  // 3. Calculer les statistiques globales
+  const totalObservations = speciesWithStats.reduce((sum, sp) => sum + sp.totalObservations, 0);
+  const avgObservations = totalObservations / species.length;
+
+  // 4. Agréger tous les mots-clés
+  const allKeywords = speciesWithStats.flatMap(sp => sp.keywords);
+  const keywordFreq = {};
+  allKeywords.forEach(kw => {
+    keywordFreq[kw] = (keywordFreq[kw] || 0) + 1;
+  });
+
+  const topKeywords = Object.entries(keywordFreq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
+    .map(([word, count]) => ({ word, occurrences: count }));
+
+  return {
+    totalSpecies: species.length,
+    totalObservations,
+    avgObservationsPerSpecies: Math.round(avgObservations * 100) / 100,
+    speciesClassification: speciesWithStats,
+    keywords: topKeywords
+  };
+}
+
+  /**
    * Récupère les statistiques taxonomiques existantes
    */
   async getTaxonomyStats() {

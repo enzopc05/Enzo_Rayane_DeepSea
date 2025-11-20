@@ -8,13 +8,16 @@ Plateforme de répertoire de créatures abyssales imaginaires avec système d'ob
 
 ## 🏗️ Architecture
 
-Le projet est composé de **2 microservices** :
+Le projet est composé de **3 microservices** :
 
 ### 1. Auth Service (Port 3001)
 Service d'authentification et de gestion des utilisateurs avec système de rôles (USER, EXPERT, ADMIN).
 
 ### 2. Observation Service (Port 3002)
-Service de gestion des espèces et des observations avec validation par les experts.
+Service de gestion des espèces et des observations avec validation par les experts. Inclut la modération avancée avec suppression logique et historisation.
+
+### 3. Taxonomy Service (Port 3003)
+Service dédié à l'analyse et à la classification des espèces. Génère des statistiques globales et organise les espèces en familles taxonomiques.
 
 ## 🛠️ Stack Technique
 
@@ -24,6 +27,7 @@ Service de gestion des espèces et des observations avec validation par les expe
 - **Authentification** : JWT
 - **Validation** : Middleware custom
 - **Architecture** : Microservices avec séparation en service layers
+- **Communication inter-services** : HTTP REST avec axios
 
 ## 📋 Prérequis
 
@@ -40,7 +44,7 @@ git clone <url-du-repo>
 cd Enzo_Rayane_DeepSea
 ```
 
-### 2. Démarrer la base de données
+### 2. Démarrer les bases de données
 
 ```bash
 docker-compose up -d
@@ -50,6 +54,11 @@ Vérifier que PostgreSQL est bien démarré :
 ```bash
 docker ps
 ```
+
+Vous devriez voir 3 containers :
+- `deepsea_auth_db` (Port 5432)
+- `deepsea_observation_db` (Port 5433)
+- `deepsea_taxonomy_db` (Port 5434)
 
 ### 3. Installer Auth Service
 
@@ -64,6 +73,15 @@ npx prisma migrate dev --name init
 
 ```bash
 cd ../observation-service
+npm install
+npx prisma generate
+npx prisma migrate dev --name init
+```
+
+### 5. Installer Taxonomy Service
+
+```bash
+cd ../taxonomy-service
 npm install
 npx prisma generate
 npx prisma migrate dev --name init
@@ -85,6 +103,13 @@ npm run dev
 ```
 ✅ Service démarré sur `http://localhost:3002`
 
+### Terminal 3 - Taxonomy Service
+```bash
+cd taxonomy-service
+npm run dev
+```
+✅ Service démarré sur `http://localhost:3003`
+
 ### Vérification du fonctionnement
 
 **Auth Service :**
@@ -95,6 +120,11 @@ curl http://localhost:3001/health
 **Observation Service :**
 ```bash
 curl http://localhost:3002/health
+```
+
+**Taxonomy Service :**
+```bash
+curl http://localhost:3003/health
 ```
 
 ## 📡 API Documentation
@@ -113,20 +143,6 @@ Content-Type: application/json
 }
 ```
 
-**Réponse :**
-```json
-{
-  "message": "Utilisateur créé avec succès",
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "username": "username",
-    "role": "USER",
-    "reputation": 0
-  }
-}
-```
-
 #### 2. Connexion
 ```http
 POST http://localhost:3001/auth/login
@@ -135,20 +151,6 @@ Content-Type: application/json
 {
   "email": "user@example.com",
   "password": "password123"
-}
-```
-
-**Réponse :**
-```json
-{
-  "message": "Connexion réussie",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com",
-    "username": "username",
-    "role": "USER"
-  }
 }
 ```
 
@@ -190,6 +192,8 @@ Content-Type: application/json
 }
 ```
 
+---
+
 ### 🐙 Observation Service - Endpoints
 
 #### 1. Créer une espèce
@@ -204,11 +208,6 @@ Content-Type: application/json
   "dangerLevel": 5
 }
 ```
-
-**Règles :**
-- `name` : unique et obligatoire
-- `description` : obligatoire
-- `dangerLevel` : entre 1 et 5
 
 #### 2. Lister toutes les espèces
 ```http
@@ -234,10 +233,6 @@ Content-Type: application/json
 }
 ```
 
-**Règles :**
-- `description` : obligatoire
-- Impossible de soumettre 2 observations de la même espèce en moins de 5 minutes
-
 #### 5. Lister les observations d'une espèce
 ```http
 GET http://localhost:3002/species/{speciesId}/observations
@@ -250,120 +245,109 @@ POST http://localhost:3002/observations/{observationId}/validate
 Authorization: Bearer {token_expert}
 ```
 
-**Règles :**
-- Impossible de valider sa propre observation
-- L'observation doit être en statut PENDING
-
 #### 7. Rejeter une observation (EXPERT/ADMIN uniquement)
 ```http
 POST http://localhost:3002/observations/{observationId}/reject
 Authorization: Bearer {token_expert}
 ```
 
-**Règles :**
-- Impossible de rejeter sa propre observation
-- L'observation doit être en statut PENDING
+---
 
-## 🧪 Scénario de test complet
+### 🔧 Admin Routes - Modération avancée (ADMIN uniquement)
 
-### Étape 1 : Créer les utilisateurs
+#### 8. Supprimer logiquement une observation
+```http
+DELETE http://localhost:3002/admin/observations/{observationId}
+Authorization: Bearer {token_admin}
+Content-Type: application/json
 
-**Créer un utilisateur normal :**
-```bash
-curl -X POST http://localhost:3001/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@test.com","username":"testuser","password":"password123"}'
+{
+  "reason": "Contenu inapproprié"
+}
 ```
 
-**Créer un admin :**
-```bash
-curl -X POST http://localhost:3001/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@test.com","username":"admin","password":"admin123"}'
+#### 9. Restaurer une observation supprimée
+```http
+POST http://localhost:3002/admin/observations/{observationId}/restore
+Authorization: Bearer {token_admin}
 ```
 
-**Créer un expert :**
-```bash
-curl -X POST http://localhost:3001/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"expert@test.com","username":"expert","password":"expert123"}'
+#### 10. Historique d'un utilisateur
+```http
+GET http://localhost:3002/admin/user/{userId}/history
+Authorization: Bearer {token_admin}
 ```
 
-### Étape 2 : Se connecter et récupérer les tokens
+Retourne toutes les actions liées aux observations de cet utilisateur (créations, validations, rejets, suppressions).
 
-**User :**
-```bash
-curl -X POST http://localhost:3001/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@test.com","password":"password123"}'
-```
-→ Sauvegarder le `token` retourné
-
-**Admin :**
-```bash
-curl -X POST http://localhost:3001/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@test.com","password":"admin123"}'
-```
-→ Sauvegarder le `token` retourné
-
-**Expert :**
-```bash
-curl -X POST http://localhost:3001/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"expert@test.com","password":"expert123"}'
-```
-→ Sauvegarder le `token` retourné
-
-### Étape 3 : Promouvoir les rôles (avec le token admin)
-
-**Promouvoir admin en ADMIN :**
-```bash
-curl -X PATCH http://localhost:3001/auth/users/{ID_ADMIN}/role \
-  -H "Authorization: Bearer {TOKEN_ADMIN}" \
-  -H "Content-Type: application/json" \
-  -d '{"role":"ADMIN"}'
+#### 11. Liste des observations supprimées
+```http
+GET http://localhost:3002/admin/observations/deleted
+Authorization: Bearer {token_admin}
 ```
 
-**Promouvoir expert en EXPERT :**
-```bash
-curl -X PATCH http://localhost:3001/auth/users/{ID_EXPERT}/role \
-  -H "Authorization: Bearer {TOKEN_ADMIN}" \
-  -H "Content-Type: application/json" \
-  -d '{"role":"EXPERT"}'
+#### 12. Historique d'une observation spécifique
+```http
+GET http://localhost:3002/admin/observations/{observationId}/history
+Authorization: Bearer {token_admin}
 ```
 
-### Étape 4 : Créer une espèce (avec le token user)
+---
 
-```bash
-curl -X POST http://localhost:3002/species \
-  -H "Authorization: Bearer {TOKEN_USER}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Leviathan des Abysses",
-    "description": "Créature gigantesque observée dans la fosse des Mariannes",
-    "dangerLevel": 5
-  }'
+### 🧬 Expert Routes (EXPERT/ADMIN uniquement)
+
+#### 13. Historique d'une espèce
+```http
+GET http://localhost:3002/expert/species/{speciesId}/history
+Authorization: Bearer {token_expert}
 ```
 
-### Étape 5 : Créer une observation (avec le token user)
+Retourne toutes les actions (validations, rejets) sur les observations de cette espèce.
 
-```bash
-curl -X POST http://localhost:3002/observations \
-  -H "Authorization: Bearer {TOKEN_USER}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "speciesId": "{ID_SPECIES}",
-    "description": "Spécimen de 50m observé à 4000m de profondeur"
-  }'
+---
+
+### 🧬 Taxonomy Service - Endpoints
+
+#### 1. Statistiques taxonomiques globales
+```http
+GET http://localhost:3003/taxonomy/stats
+Authorization: Bearer {token}
 ```
 
-### Étape 6 : Valider l'observation (avec le token expert)
-
-```bash
-curl -X POST http://localhost:3002/observations/{ID_OBSERVATION}/validate \
-  -H "Authorization: Bearer {TOKEN_EXPERT}"
+**Réponse :**
+```json
+{
+  "totalSpecies": 15,
+  "totalObservations": 48,
+  "avgObservationsPerSpecies": 3.2,
+  "speciesClassification": [
+    {
+      "id": "uuid",
+      "name": "Kraken Abyssal",
+      "dangerLevel": 5,
+      "totalObservations": 8,
+      "validatedObservations": 6,
+      "family": "Cephalopodes Géants",
+      "subfamily": "Kraken",
+      "evolutionBranch": "Prédateur Apex",
+      "keywords": ["tentacules", "profondeur", "gigantesque"]
+    }
+  ],
+  "keywords": [
+    { "word": "profondeur", "occurrences": 23 },
+    { "word": "bioluminescence", "occurrences": 18 }
+  ]
+}
 ```
+
+**Fonctionnalités :**
+- Nombre total d'espèces et d'observations
+- Moyenne d'observations par espèce
+- Classification hiérarchique (famille, sous-espèce, branche évolutive)
+- Extraction des mots-clés récurrents dans les descriptions
+- Organisation des espèces par niveau de danger
+
+---
 
 ## 📊 Modèles de données
 
@@ -402,58 +386,113 @@ model Species {
 ### Observation (observation-service)
 ```prisma
 model Observation {
-  id          String            @id @default(uuid())
-  speciesId   String
-  authorId    String
-  description String
-  status      ObservationStatus @default(PENDING)
-  validatedBy String?
-  validatedAt DateTime?
-  createdAt   DateTime          @default(now())
-  species     Species           @relation(fields: [speciesId], references: [id])
+  id            String               @id @default(uuid())
+  speciesId     String
+  authorId      String
+  description   String
+  status        ObservationStatus    @default(PENDING)
+  validatedBy   String?
+  validatedAt   DateTime?
+  deletedBy     String?
+  deletedAt     DateTime?
+  deletedReason String?
+  createdAt     DateTime             @default(now())
+  species       Species              @relation(...)
+  history       ObservationHistory[]
 }
 
 enum ObservationStatus {
   PENDING
   VALIDATED
   REJECTED
+  DELETED
 }
 ```
+
+### ObservationHistory (observation-service)
+```prisma
+model ObservationHistory {
+  id              String      @id @default(uuid())
+  observationId   String
+  action          String      // CREATED, VALIDATED, REJECTED, DELETED, RESTORED
+  performedBy     String
+  performedByRole String
+  previousStatus  String?
+  newStatus       String
+  comment         String?
+  timestamp       DateTime    @default(now())
+  observation     Observation @relation(...)
+}
+```
+
+### TaxonomyCache (taxonomy-service)
+```prisma
+model TaxonomyCache {
+  id              String   @id @default(uuid())
+  speciesId       String   @unique
+  family          String?
+  subfamily       String?
+  evolutionBranch String?
+  lastUpdated     DateTime @default(now())
+}
+```
+
+---
 
 ## 🔒 Règles métier implémentées
 
 ### Auth Service
-✅ Hash des mots de passe avec bcryptjs
-✅ JWT avec expiration de 7 jours
-✅ Système de rôles (USER, EXPERT, ADMIN)
-✅ Routes protégées par authentification
-✅ Routes admin réservées aux ADMIN
-✅ Validation des emails et mots de passe
+✅ Hash des mots de passe avec bcryptjs  
+✅ JWT avec expiration de 7 jours  
+✅ Système de rôles (USER, EXPERT, ADMIN)  
+✅ Routes protégées par authentification  
+✅ Routes admin réservées aux ADMIN  
+✅ Validation des emails et mots de passe  
 ✅ Système de réputation (promotion automatique à 10 points)
 
 ### Observation Service
-✅ Impossible de créer deux espèces avec le même nom
-✅ Description obligatoire pour les espèces et observations
-✅ DangerLevel entre 1 et 5
-✅ Impossible de soumettre 2 observations de la même espèce en < 5 minutes
-✅ Impossible de valider/rejeter sa propre observation
-✅ Seuls les EXPERT et ADMIN peuvent valider/rejeter
-✅ Une observation ne peut être traitée qu'une seule fois
-✅ Communication entre services via JWT
+✅ Impossible de créer deux espèces avec le même nom  
+✅ Description obligatoire pour les espèces et observations  
+✅ DangerLevel entre 1 et 5  
+✅ Impossible de soumettre 2 observations de la même espèce en < 5 minutes  
+✅ Impossible de valider/rejeter sa propre observation  
+✅ Seuls les EXPERT et ADMIN peuvent valider/rejeter  
+✅ Une observation ne peut être traitée qu'une seule fois  
+✅ Communication entre services via JWT  
+✅ **Suppression logique (soft delete) par ADMIN**  
+✅ **Restauration des observations supprimées par ADMIN**  
+✅ **Historisation complète de toutes les actions**  
+✅ **Impossible de valider/rejeter une observation supprimée**
+
+### Taxonomy Service
+✅ Interrogation de l'observation-service pour récupérer les données  
+✅ Classification automatique en familles et sous-espèces  
+✅ Organisation par branches évolutives  
+✅ Extraction de mots-clés récurrents (avec stopwords français)  
+✅ Génération de statistiques globales  
+✅ Cache des classifications taxonomiques
+
+---
 
 ## 🐛 Dépannage
 
 ### Erreur : "Can't reach database server"
-→ Vérifier que Docker Desktop est démarré
+→ Vérifier que Docker Desktop est démarré  
 → Vérifier que PostgreSQL tourne : `docker ps`
 
 ### Erreur : "Token invalide"
-→ Vérifier que le JWT_SECRET est identique dans les deux `.env`
+→ Vérifier que le JWT_SECRET est identique dans les 3 `.env`  
 → Régénérer un token en se reconnectant
 
 ### Erreur : "Port already in use"
-→ Vérifier qu'aucun autre service n'utilise les ports 3001 ou 3002
+→ Vérifier qu'aucun autre service n'utilise les ports 3001, 3002 ou 3003  
 → Modifier le port dans le fichier `.env` si nécessaire
+
+### Erreur : "Cannot connect to observation-service"
+→ Vérifier que l'observation-service est bien démarré  
+→ Vérifier l'URL dans le `.env` du taxonomy-service
+
+---
 
 ## 📝 Structure du projet
 
@@ -478,6 +517,7 @@ Enzo_Rayane_DeepSea/
 │   ├── .env
 │   ├── .gitignore
 │   └── package.json
+│
 ├── observation-service/
 │   ├── prisma/
 │   │   └── schema.prisma
@@ -487,51 +527,96 @@ Enzo_Rayane_DeepSea/
 │   │   │   └── jwt.js
 │   │   ├── controllers/
 │   │   │   ├── observation.controller.js
-│   │   │   └── species.controller.js
+│   │   │   ├── species.controller.js
+│   │   │   ├── admin.controller.js        # NOUVEAU
+│   │   │   └── expert.controller.js       # NOUVEAU
 │   │   ├── middlewares/
 │   │   │   └── auth.middleware.js
 │   │   ├── routes/
 │   │   │   ├── observation.routes.js
-│   │   │   └── species.routes.js
+│   │   │   ├── species.routes.js
+│   │   │   ├── admin.routes.js            # NOUVEAU
+│   │   │   └── expert.routes.js           # NOUVEAU
 │   │   ├── services/
 │   │   │   ├── observation.service.js
-│   │   │   └── species.service.js
+│   │   │   ├── species.service.js
+│   │   │   └── admin.service.js           # NOUVEAU
 │   │   └── server.js
 │   ├── .env
 │   ├── .gitignore
 │   └── package.json
+│
+├── taxonomy-service/                       # NOUVEAU SERVICE
+│   ├── prisma/
+│   │   └── schema.prisma
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── database.js
+│   │   │   └── jwt.js
+│   │   ├── controllers/
+│   │   │   └── taxonomy.controller.js
+│   │   ├── middlewares/
+│   │   │   └── auth.middleware.js
+│   │   ├── routes/
+│   │   │   └── taxonomy.routes.js
+│   │   ├── services/
+│   │   │   └── taxonomy.service.js
+│   │   └── server.js
+│   ├── .env
+│   ├── .gitignore
+│   └── package.json
+│
 ├── docker-compose.yml
 ├── init-db.sql
-└── README.md
+├── README.md
+└── API_EXAMPLES.md
 ```
 
-## 🎓 Niveau atteint : 10/20
+---
+
+## 🎓 Niveau atteint : 16/20
 
 ### Fonctionnalités implémentées :
-✅ 2 microservices fonctionnels (auth-service + observation-service)
-✅ Authentification JWT complète
-✅ Système de rôles (USER, EXPERT, ADMIN)
-✅ CRUD complet sur les espèces
-✅ Gestion des observations avec validation
-✅ Communication entre microservices
-✅ Toutes les règles métier de base
-✅ Architecture en service layers
+
+#### Niveau 10/20 (Base)
+✅ 2 microservices fonctionnels (auth-service + observation-service)  
+✅ Authentification JWT complète  
+✅ Système de rôles (USER, EXPERT, ADMIN)  
+✅ CRUD complet sur les espèces  
+✅ Gestion des observations avec validation  
+✅ Communication entre microservices  
+✅ Toutes les règles métier de base  
+✅ Architecture en service layers  
 ✅ Documentation complète
+
+#### Niveau 16/20 (Avancé)
+✅ **3ème microservice : taxonomy-service**  
+✅ **Classification taxonomique des espèces**  
+✅ **Génération de statistiques globales**  
+✅ **Organisation en familles et branches évolutives**  
+✅ **Extraction de mots-clés récurrents**  
+✅ **Suppression logique (soft delete) des observations**  
+✅ **Historisation complète des actions (CREATED, VALIDATED, REJECTED, DELETED, RESTORED)**  
+✅ **GET /admin/user/:id/history - Historique complet d'un utilisateur**  
+✅ **GET /expert/species/:id/history - Historique des validations d'une espèce**  
+✅ **POST /admin/observations/:id/restore - Restauration d'observations supprimées**  
+✅ **Respect strict des rôles pour toutes les actions de modération**
+
+---
 
 ## 📦 Technologies utilisées
 
 - **Express.js** : Framework web
 - **Prisma** : ORM
-- **PostgreSQL** : Base de données
+- **PostgreSQL** : Base de données (3 instances)
 - **JWT** : Authentification
 - **bcryptjs** : Hash des mots de passe
+- **axios** : Communication inter-services
 - **Docker** : Conteneurisation de PostgreSQL
+
+---
 
 ## 👨‍💻 Auteurs
 
-- Enzo - [enzopc05]
-- Rayane
-
-## 📄 Licence
-
-MIT
+- **Enzo Pace** - enzopc05
+- **Rayane Menkar** - RayaneMkr

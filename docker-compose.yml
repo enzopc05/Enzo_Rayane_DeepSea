@@ -20,5 +20,19 @@ services:
       timeout: 5s
       retries: 5
 
+  taxonomy_db:
+    image: postgres:15-alpine
+    container_name: deepsea_taxonomy_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: taxonomy_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - taxonomy_data:/var/lib/postgresql/data
+
 volumes:
-  postgres_data:
+  auth_data:
+  observation_data:
+  taxonomy_data:
