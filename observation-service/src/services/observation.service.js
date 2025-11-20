@@ -1,6 +1,27 @@
 const prisma = require('../config/database');
+const axios = require('axios');
 
 class ObservationService {
+  // Fonction utilitaire pour mettre à jour la réputation d'un utilisateur
+  async updateUserReputation(userId, points) {
+    try {
+      // Appel au service d'auth pour mettre à jour la réputation
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+      const url = `${authServiceUrl.replace(/\/$/, '')}/auth/users/${userId}/reputation`;
+      console.log(`🔄 Mise à jour réputation: userId=${userId}, points=${points}, URL=${url}`);
+      
+      const response = await axios.patch(url, {
+        reputationChange: points
+      });
+      
+      console.log(`✅ Réputation mise à jour:`, response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`❌ Erreur réputation (${error.response?.status}):`, error.response?.data || error.message);
+      // On continue même si la mise à jour échoue
+    }
+  }
+
   // Fonction utilitaire pour recalculer la rareté d'une espèce
   async updateSpeciesRarity(speciesId) {
     const validatedCount = await prisma.observation.count({
@@ -97,6 +118,12 @@ class ObservationService {
       }
     });
 
+    // Mettre à jour la réputation
+    // +3 pour l'auteur (observation validée)
+    await this.updateUserReputation(observation.authorId, 3);
+    // +1 pour le validateur (bonus si expert)
+    await this.updateUserReputation(validatorId, 1);
+
     // Mettre à jour le rarityScore de l'espèce
     await this.updateSpeciesRarity(observation.speciesId);
 
@@ -135,6 +162,10 @@ class ObservationService {
         species: true
       }
     });
+
+    // Mettre à jour la réputation
+    // -1 pour l'auteur (observation rejetée)
+    await this.updateUserReputation(observation.authorId, -1);
 
     // Mettre à jour le rarityScore de l'espèce
     await this.updateSpeciesRarity(observation.speciesId);
