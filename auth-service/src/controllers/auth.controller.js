@@ -3,7 +3,9 @@ const authService = require('../services/auth.service');
 class AuthController {
   async register(req, res) {
     try {
-      const { email, username, password } = req.body;
+      // 👇 MODIFIÉ : Récupération du rôle depuis le body (optionnel)
+      const { email, username, password, role } = req.body;
+      
       if (!email || !username || !password) {
         return res.status(400).json({ error: 'Tous les champs sont requis' });
       }
@@ -13,7 +15,9 @@ class AuthController {
       if (password.length < 6) {
         return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
       }
-      const user = await authService.register(email, username, password);
+      
+      // 👇 MODIFIÉ : Passage du rôle au service (ou undefined si non fourni)
+      const user = await authService.register(email, username, password, role);
       res.status(201).json({ message: 'Utilisateur créé avec succès', user });
     } catch (error) {
       res.status(400).json({ error: error.message });

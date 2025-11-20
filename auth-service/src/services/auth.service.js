@@ -4,16 +4,29 @@ const prisma = require('../config/database');
 const jwtConfig = require('../config/jwt');
 
 class AuthService {
-  async register(email, username, password) {
+  // 👇 MODIFIÉ : Ajout du paramètre role avec une valeur par défaut
+  async register(email, username, password, role = 'USER') {
     const existingUserByEmail = await prisma.user.findUnique({ where: { email } });
     if (existingUserByEmail) throw new Error('Cet email est déjà utilisé');
 
     const existingUserByUsername = await prisma.user.findUnique({ where: { username } });
     if (existingUserByUsername) throw new Error('Ce nom d\'utilisateur est déjà pris');
 
+    // 👇 AJOUTÉ : Validation du rôle
+    const validRoles = ['USER', 'EXPERT', 'ADMIN'];
+    if (!validRoles.includes(role)) {
+      throw new Error('Rôle invalide. Valeurs acceptées : USER, EXPERT, ADMIN');
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { email, username, password: hashedPassword, role: 'USER', reputation: 0 }
+      data: { 
+        email, 
+        username, 
+        password: hashedPassword, 
+        role: role, // 👈 Utilise le rôle passé en paramètre
+        reputation: 0 
+      }
     });
 
     const { password: _, ...userWithoutPassword } = user;
