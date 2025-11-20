@@ -5,6 +5,7 @@ const { authenticateToken } = require('../middlewares/auth.middleware');
 
 // Routes publiques (avec authentification)
 router.post('/', authenticateToken, speciesController.createSpecies);
+router.get('/sorted-by-rarity', authenticateToken, speciesController.getSpeciesSortedByRarity);
 router.get('/:id', authenticateToken, speciesController.getSpeciesById);
 router.get('/', authenticateToken, speciesController.getAllSpecies);
 

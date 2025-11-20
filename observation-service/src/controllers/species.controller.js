@@ -53,6 +53,22 @@ class SpeciesController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  async getSpeciesSortedByRarity(req, res) {
+    try {
+      const order = req.query.order || 'desc'; // ?order=asc pour ascendant
+      const species = await speciesService.getSpeciesSortedByRarity(order);
+
+      res.json({
+        count: species.length,
+        sortedBy: 'rarityScore',
+        order,
+        species
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = new SpeciesController();
