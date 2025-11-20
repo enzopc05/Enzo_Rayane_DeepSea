@@ -1,0 +1,34 @@
+
+{
+	"name": "auth-service",
+	"version": "1.0.0",
+	"description": "Authentication service for Enzo_Rayane_DeepSea",
+	"main": "src/server.js",
+	"scripts": {
+		"start": "node src/server.js",
+		"dev": "nodemon --watch src --exec node src/server.js",
+		"prisma:generate": "prisma generate",
+		"prisma:migrate": "prisma migrate dev --name init",
+		"setup": "npm run prisma:generate && npm run prisma:migrate",
+		"lint": "eslint . --ext .js",
+		"test": "echo \"No tests specified\" && exit 0"
+	},
+	"dependencies": {
+		"bcryptjs": "^2.4.3",
+		"cors": "^2.8.5",
+		"dotenv": "^16.0.3",
+		"express": "^4.18.2",
+		"jsonwebtoken": "^9.0.0",
+		"@prisma/client": "^5.0.0"
+	},
+	"devDependencies": {
+		"nodemon": "^2.0.22",
+		"prisma": "^5.0.0",
+		"eslint": "^8.0.0"
+	},
+	"engines": {
+		"node": ">=16"
+	},
+	"author": "enzopc05",
+	"license": "MIT"
+}
