@@ -56,6 +56,17 @@ class SpeciesService {
       orderBy: { createdAt: 'desc' }
     });
   }
+
+  async getSpeciesSortedByRarity(order = 'desc') {
+    return await prisma.species.findMany({
+      include: {
+        observations: {
+          where: { status: 'VALIDATED' }
+        }
+      },
+      orderBy: { rarityScore: order === 'asc' ? 'asc' : 'desc' }
+    });
+  }
 }
 
 module.exports = new SpeciesService();
