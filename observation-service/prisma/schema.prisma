@@ -13,8 +13,10 @@ model Species {
   name         String        @unique
   description  String?
   dangerLevel  Int           @default(1)
+  rarityScore  Float         @default(1)
   createdAt    DateTime      @default(now())
   observations Observation[]
+
 
   @@map("species")
 }
