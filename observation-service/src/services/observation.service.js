@@ -1,6 +1,20 @@
 const prisma = require('../config/database');
 
 class ObservationService {
+  // Fonction utilitaire pour recalculer la rareté d'une espèce
+  async updateSpeciesRarity(speciesId) {
+    const validatedCount = await prisma.observation.count({
+      where: { speciesId, status: 'VALIDATED' }
+    });
+    
+    const rarityScore = 1 + validatedCount / 5;
+    
+    await prisma.species.update({
+      where: { id: speciesId },
+      data: { rarityScore }
+    });
+  }
+
   async createObservation(authorId, speciesId, description) {
     // Vérifier que l'espèce existe
     const species = await prisma.species.findUnique({
@@ -83,6 +97,9 @@ class ObservationService {
       }
     });
 
+    // Mettre à jour le rarityScore de l'espèce
+    await this.updateSpeciesRarity(observation.speciesId);
+
     return validatedObservation;
   }
 
@@ -118,6 +135,9 @@ class ObservationService {
         species: true
       }
     });
+
+    // Mettre à jour le rarityScore de l'espèce
+    await this.updateSpeciesRarity(observation.speciesId);
 
     return rejectedObservation;
   }
