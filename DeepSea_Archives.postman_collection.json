@@ -1,0 +1,542 @@
+{
+  "info": {
+    "name": "DeepSea Archives API",
+    "_postman_id": "deepsea-archives-collection",
+    "description": "Collection complète pour tester les microservices DeepSea Archives",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "1. Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@test.com\",\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "2. Register Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@test.com\",\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "3. Register Expert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"expert@test.com\",\n  \"username\": \"expert\",\n  \"password\": \"expert123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "4. Login User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"user_token\", jsonData.token);",
+                  "pm.environment.set(\"user_id\", jsonData.user.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@test.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "5. Login Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"admin_token\", jsonData.token);",
+                  "pm.environment.set(\"admin_id\", jsonData.user.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "6. Login Expert",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"expert_token\", jsonData.token);",
+                  "pm.environment.set(\"expert_id\", jsonData.user.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"expert@test.com\",\n  \"password\": \"expert123\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "7. Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3001/auth/me",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "8. Get All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3001/auth/admin/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "9. Promote Admin to ADMIN",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/auth/users/{{admin_id}}/role",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "users", "{{admin_id}}", "role"]
+            }
+          }
+        },
+        {
+          "name": "10. Promote Expert to EXPERT",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"EXPERT\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/auth/users/{{expert_id}}/role",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "users", "{{expert_id}}", "role"]
+            }
+          }
+        },
+        {
+          "name": "11. Update Reputation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reputationChange\": 5\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3001/auth/users/{{user_id}}/reputation",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "users", "{{user_id}}", "reputation"]
+            }
+          }
+        },
+        {
+          "name": "12. Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/auth/users/{{user_id}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["auth", "users", "{{user_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Observation Service",
+      "item": [
+        {
+          "name": "Species",
+          "item": [
+            {
+              "name": "1. Create Species",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "pm.environment.set(\"species_id\", jsonData.species.id);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Kraken Abyssal\",\n  \"description\": \"Créature tentaculaire gigantesque des profondeurs marines. Peut atteindre 50 mètres de longueur.\",\n  \"dangerLevel\": 5\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:3002/species",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["species"]
+                }
+              }
+            },
+            {
+              "name": "2. Get All Species",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/species",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["species"]
+                }
+              }
+            },
+            {
+              "name": "3. Get Species By ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/species/{{species_id}}",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["species", "{{species_id}}"]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Observations",
+          "item": [
+            {
+              "name": "1. Create Observation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "var jsonData = pm.response.json();",
+                      "pm.environment.set(\"observation_id\", jsonData.observation.id);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"speciesId\": \"{{species_id}}\",\n  \"description\": \"Spécimen observé à 4000 mètres de profondeur dans la fosse des Mariannes. Tentacules mesurant environ 15 mètres.\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:3002/observations",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["observations"]
+                }
+              }
+            },
+            {
+              "name": "2. Get Observations By Species",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{user_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/species/{{species_id}}/observations",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["species", "{{species_id}}", "observations"]
+                }
+              }
+            },
+            {
+              "name": "3. Validate Observation (Expert)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{expert_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/observations/{{observation_id}}/validate",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["observations", "{{observation_id}}", "validate"]
+                }
+              }
+            },
+            {
+              "name": "4. Reject Observation (Expert)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{expert_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/observations/{{observation_id}}/reject",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["observations", "{{observation_id}}", "reject"]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health Checks",
+      "item": [
+        {
+          "name": "Auth Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3001/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3001",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Observation Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3002/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3002",
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
