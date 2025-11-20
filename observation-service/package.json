@@ -1,0 +1,30 @@
+{
+  "name": "observation-service",
+  "version": "1.0.0",
+  "description": "Observation service for DeepSea Archives",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon --watch src --exec node src/server.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev --name init",
+    "setup": "npm run prisma:generate && npm run prisma:migrate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "prisma": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "author": "enzopc05",
+  "license": "MIT"
+}

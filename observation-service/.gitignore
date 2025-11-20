@@ -35,9 +35,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-## Docker
-docker-compose.override.yml
-
 ## Databases
 *.sqlite
 *.sqlite3

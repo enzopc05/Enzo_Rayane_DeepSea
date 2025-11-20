@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Species {
+  id           String        @id @default(uuid())
+  authorId     String
+  name         String        @unique
+  description  String?
+  dangerLevel  Int           @default(1)
+  createdAt    DateTime      @default(now())
+  observations Observation[]
+
+  @@map("species")
+}
+
+model Observation {
+  id          String            @id @default(uuid())
+  speciesId   String
+  authorId    String
+  description String
+  status      ObservationStatus @default(PENDING)
+  validatedBy String?
+  validatedAt DateTime?
+  createdAt   DateTime          @default(now())
+
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Cascade)
+
+  @@map("observations")
+}
+
+enum ObservationStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+}
