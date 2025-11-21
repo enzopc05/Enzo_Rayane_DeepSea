@@ -25,4 +25,15 @@ const requireExpert = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticateToken, requireExpert };
+const requireAdmin = (req, res, next) => {
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Accès réservé aux administrateurs' });
+  }
+  next();
+};
+
+module.exports = {
+  authenticateToken,
+  requireExpert,
+  requireAdmin
+};

@@ -1,36 +1,62 @@
 ﻿version: '3.8'
 
 services:
-  postgres:
+  # Base de données pour Auth Service
+  auth_db:
     image: postgres:16-alpine
-    container_name: deepsea-postgres
+    container_name: deepsea_auth_db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: deepsea2025
-      POSTGRES_DB: postgres
+      POSTGRES_DB: deepsea_auth
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - auth_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  taxonomy_db:
-    image: postgres:15-alpine
-    container_name: deepsea_taxonomy_db
+  # Base de données pour Observation Service
+  observation_db:
+    image: postgres:16-alpine
+    container_name: deepsea_observation_db
+    restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
-      POSTGRES_DB: taxonomy_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: deepsea2025
+      POSTGRES_DB: deepsea_observation
+    ports:
+      - "5433:5432"
+    volumes:
+      - observation_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Base de données pour Taxonomy Service
+  taxonomy_db:
+    image: postgres:16-alpine
+    container_name: deepsea_taxonomy_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: deepsea2025
+      POSTGRES_DB: deepsea_taxonomy
     ports:
       - "5434:5432"
     volumes:
       - taxonomy_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   auth_data:

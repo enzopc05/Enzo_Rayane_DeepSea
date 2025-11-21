@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "DeepSea Archives API",
-    "_postman_id": "deepsea-archives-collection",
-    "description": "Collection complète pour tester les microservices DeepSea Archives",
+    "name": "DeepSea Archives API - Niveau 16/20",
+    "_postman_id": "deepsea-archives-collection-v16",
+    "description": "Collection complète pour tester les 3 microservices DeepSea Archives avec modération avancée et taxonomy service",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -351,7 +351,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Kraken Abyssal\",\n  \"description\": \"Créature tentaculaire gigantesque des profondeurs marines. Peut atteindre 50 mètres de longueur.\",\n  \"dangerLevel\": 5\n}"
+                  "raw": "{\n  \"name\": \"Kraken Abyssal\",\n  \"description\": \"Créature tentaculaire gigantesque des profondeurs marines. Peut atteindre 50 mètres de longueur avec des tentacules bioluminescents.\",\n  \"dangerLevel\": 5\n}"
                 },
                 "url": {
                   "raw": "http://localhost:3002/species",
@@ -433,7 +433,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"speciesId\": \"{{species_id}}\",\n  \"description\": \"Spécimen observé à 4000 mètres de profondeur dans la fosse des Mariannes. Tentacules mesurant environ 15 mètres.\"\n}"
+                  "raw": "{\n  \"speciesId\": \"{{species_id}}\",\n  \"description\": \"Spécimen observé à 4000 mètres de profondeur dans la fosse des Mariannes. Tentacules mesurant environ 15 mètres avec bioluminescence intense.\"\n}"
                 },
                 "url": {
                   "raw": "http://localhost:3002/observations",
@@ -502,6 +502,169 @@
               }
             }
           ]
+        },
+        {
+          "name": "Admin - Modération",
+          "item": [
+            {
+              "name": "1. Soft Delete Observation",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Contenu inapproprié ou spam\"\n}"
+                },
+                "url": {
+                  "raw": "http://localhost:3002/admin/observations/{{observation_id}}",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["admin", "observations", "{{observation_id}}"]
+                },
+                "description": "Suppression logique d'une observation par un ADMIN"
+              }
+            },
+            {
+              "name": "2. Restore Observation",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/admin/observations/{{observation_id}}/restore",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["admin", "observations", "{{observation_id}}", "restore"]
+                },
+                "description": "Restauration d'une observation supprimée (retour au statut PENDING)"
+              }
+            },
+            {
+              "name": "3. Get User History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/admin/user/{{user_id}}/history",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["admin", "user", "{{user_id}}", "history"]
+                },
+                "description": "Historique complet de toutes les observations et actions d'un utilisateur"
+              }
+            },
+            {
+              "name": "4. Get Deleted Observations",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/admin/observations/deleted",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["admin", "observations", "deleted"]
+                },
+                "description": "Liste de toutes les observations supprimées (statut DELETED)"
+              }
+            },
+            {
+              "name": "5. Get Observation History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/admin/observations/{{observation_id}}/history",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["admin", "observations", "{{observation_id}}", "history"]
+                },
+                "description": "Historique complet des actions sur une observation spécifique (CREATED, VALIDATED, REJECTED, DELETED, RESTORED)"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Expert - Historiques",
+          "item": [
+            {
+              "name": "1. Get Species History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{expert_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "http://localhost:3002/expert/species/{{species_id}}/history",
+                  "protocol": "http",
+                  "host": ["localhost"],
+                  "port": "3002",
+                  "path": ["expert", "species", "{{species_id}}", "history"]
+                },
+                "description": "Historique de toutes les validations/rejets pour une espèce donnée"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Taxonomy Service",
+      "item": [
+        {
+          "name": "1. Get Taxonomy Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{user_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:3003/taxonomy/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3003",
+              "path": ["taxonomy", "stats"]
+            },
+            "description": "Statistiques taxonomiques globales : classification des espèces, familles, branches évolutives, mots-clés récurrents"
+          }
         }
       ]
     },
@@ -535,8 +698,64 @@
               "path": ["health"]
             }
           }
+        },
+        {
+          "name": "Taxonomy Service Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3003/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3003",
+              "path": ["health"]
+            }
+          }
         }
       ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "user_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "expert_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "expert_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "species_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "observation_id",
+      "value": "",
+      "type": "string"
     }
   ]
 }
